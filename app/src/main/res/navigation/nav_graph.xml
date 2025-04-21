@@ -1,28 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
-
+    app:startDestination="@id/PCSelectFragment">
     <fragment
-        android:id="@+id/FirstFragment"
-        android:name="com.example.pclink.FirstFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
-
+        android:id="@+id/PCSelectFragment"
+        android:name="com.example.pclink.PCSelectFragment"
+        android:label="PCSelectFragment" >
         <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            android:id="@+id/action_PCSelectFragment_to_PCSettingsFragment"
+            app:destination="@id/PCSettingsFragment" />
+        <action
+            android:id="@+id/action_PCSelectFragment_to_PCStreamFragment"
+            app:destination="@id/PCStreamFragment" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
-        android:name="com.example.pclink.SecondFragment"
-        android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
-
-        <action
-            android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
-    </fragment>
+        android:id="@+id/PCSettingsFragment"
+        android:name="com.example.pclink.PCSettingsFragment"
+        android:label="PCSettingsFragment" />
+    <fragment
+        android:id="@+id/PCStreamFragment"
+        android:name="com.example.pclink.PCStreamFragment"
+        android:label="PCStreamFragment" />
 </navigation>
