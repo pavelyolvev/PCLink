@@ -12,13 +12,30 @@
         <action
             android:id="@+id/action_PCSelectFragment_to_PCStreamFragment"
             app:destination="@id/PCStreamFragment" />
+        <action
+            android:id="@+id/action_PCSelectFragment_to_PCNewFragment"
+            app:destination="@id/PCNewFragment" />
     </fragment>
     <fragment
         android:id="@+id/PCSettingsFragment"
         android:name="com.example.pclink.PCSettingsFragment"
-        android:label="PCSettingsFragment" />
+        android:label="PCSettingsFragment" >
+        <argument
+            android:name="pcId"
+            app:argType="integer" />
+    </fragment>
     <fragment
         android:id="@+id/PCStreamFragment"
         android:name="com.example.pclink.PCStreamFragment"
-        android:label="PCStreamFragment" />
+        android:label="PCStreamFragment" >
+        <argument
+            android:name="pcId"
+            app:argType="integer" />
+    </fragment>
+    <fragment
+        android:id="@+id/PCNewFragment"
+        android:name="com.example.pclink.PCNewFragment"
+        android:label="PCNewFragment" >
+
+    </fragment>
 </navigation>

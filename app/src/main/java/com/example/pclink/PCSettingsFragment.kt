@@ -1,5 +1,6 @@
 package com.example.pclink
 
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -35,6 +36,15 @@ class PCSettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 //        val backBtn: ImageButton = view.findViewById(R.id.btnBack)
         val saveBtn: Button = view.findViewById(R.id.btnSave)
+        val sharedPref = requireContext().getSharedPreferences("PC_PREFS", Context.MODE_PRIVATE)
+        binding.spinnerMode.setSelection(
+            resources.getStringArray(R.array.mode_options).indexOf(sharedPref.getString("mode", "Тачпад"))
+        )
+        binding.spinnerMouseMode.setSelection(
+            resources.getStringArray(R.array.mouse_mode_options).indexOf(sharedPref.getString("mouse_mode", "Тачпад"))
+        )
+        binding.editIP.setText(sharedPref.getString("ip", ""))
+        binding.editPort.setText(sharedPref.getString("port", ""))
 
         if (isNew) saveBtn.visibility = View.VISIBLE
 
@@ -44,6 +54,19 @@ class PCSettingsFragment : Fragment() {
 
         saveBtn.setOnClickListener {
             // Сохраняем настройки, потом возвращаемся
+            val mode = binding.spinnerMode.selectedItem.toString()
+            val mouseMode = binding.spinnerMouseMode.selectedItem.toString()
+            val ip = binding.editIP.text.toString()
+            val port = binding.editPort.text.toString()
+
+            val sharedPref = requireContext().getSharedPreferences("PC_PREFS", Context.MODE_PRIVATE)
+            with(sharedPref.edit()) {
+                putString("mode", mode)
+                putString("mouse_mode", mouseMode)
+                putString("ip", ip)
+                putString("port", port)
+                apply()
+            }
             findNavController().popBackStack()
         }
     }

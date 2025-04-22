@@ -44,55 +44,29 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
         val navController = navHostFragment.navController
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            if(destination.id == R.id.PCStreamFragment){
+                binding.toolbar.visibility = View.GONE
+            } else binding.toolbar.visibility = View.VISIBLE
+            // Показывать FAB только на PCSelectFragment
+            if (destination.id == R.id.PCSelectFragment) {
+                binding.fab.show()
+            } else {
+                binding.fab.hide()
+            }
+        }
+
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
 
         binding.fab.setOnClickListener { view ->
-            // Показ Snackbar'а
-            Snackbar.make(view, "Команда отправляется...", Snackbar.LENGTH_SHORT)
-                .setAnchorView(R.id.fab)
-                .show()
-
-            // Сетевые действия в отдельном потоке
-            // Подключаемся к серверу
-            thread {
-                try {
-                    socket = Socket("192.168.31.49", 12312)
-                    writer = PrintWriter(socket!!.getOutputStream(), true)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+            val bundle = Bundle().apply {
+                putBoolean("isNew", true)
             }
+            navController.navigate(R.id.action_PCSelectFragment_to_PCNewFragment, bundle)
 
-//            val touchPad = findViewById<View>(R.id.touchPad)
-//            Log.d("TouchPadDebug", "touchPad = $touchPad")
-//
-//            touchPad.setOnTouchListener { _, event ->
-//                when (event.action) {
-//                    MotionEvent.ACTION_DOWN -> {
-//                        lastX = event.x
-//                        lastY = event.y
-//                    }
-//
-//                    MotionEvent.ACTION_MOVE -> {
-//                        val dx = event.x - lastX
-//                        val dy = event.y - lastY
-//                        lastX = event.x
-//                        lastY = event.y
-//
-//                        // Отправка команды MOVE
-//                        sendCommand("MOVE:${dx.toInt()},${dy.toInt()}")
-//                    }
-//
-//                    MotionEvent.ACTION_UP -> {
-//                        // Отправка команды CLICK
-//                        sendCommand("CLICK")
-//                    }
-//                }
-//                true
-//            }
         }
     }
 

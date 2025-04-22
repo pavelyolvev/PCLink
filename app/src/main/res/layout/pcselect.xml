@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
+    android:layout_marginTop="64dp"
     android:background="@android:color/white">
 
     <TextView
@@ -15,6 +16,12 @@
         android:textStyle="bold"
         android:gravity="center"
         android:paddingBottom="8dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"/>
 
     <LinearLayout
         android:id="@+id/pcCard"
