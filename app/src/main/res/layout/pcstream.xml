@@ -12,10 +12,9 @@
 <!--        android:src="@android:drawable/ic_media_previous"-->
 <!--        android:background="@android:color/transparent" />-->
 
-    <View
+    <ImageView
         android:id="@+id/streamView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="64dp"
         android:background="#dddddd" />
 </FrameLayout>

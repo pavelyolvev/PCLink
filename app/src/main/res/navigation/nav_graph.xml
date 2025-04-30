@@ -5,7 +5,7 @@
     <fragment
         android:id="@+id/PCSelectFragment"
         android:name="com.example.pclink.PCSelectFragment"
-        android:label="PCSelectFragment" >
+        android:label="PCLink">
         <action
             android:id="@+id/action_PCSelectFragment_to_PCSettingsFragment"
             app:destination="@id/PCSettingsFragment" />
@@ -19,7 +19,7 @@
     <fragment
         android:id="@+id/PCSettingsFragment"
         android:name="com.example.pclink.PCSettingsFragment"
-        android:label="PCSettingsFragment" >
+        android:label="Настройки">
         <argument
             android:name="pcId"
             app:argType="integer" />
@@ -35,7 +35,7 @@
     <fragment
         android:id="@+id/PCNewFragment"
         android:name="com.example.pclink.PCNewFragment"
-        android:label="PCNewFragment" >
+        android:label="Добавить ПК">
 
     </fragment>
 </navigation>

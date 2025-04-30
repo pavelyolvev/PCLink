@@ -53,20 +53,25 @@ class PCSettingsFragment : Fragment() {
 //        }
 
         saveBtn.setOnClickListener {
-            // Сохраняем настройки, потом возвращаемся
-            val mode = binding.spinnerMode.selectedItem.toString()
-            val mouseMode = binding.spinnerMouseMode.selectedItem.toString()
+            val modeIndex = binding.spinnerMode.selectedItemPosition
+            val mouseModeIndex = binding.spinnerMouseMode.selectedItemPosition
             val ip = binding.editIP.text.toString()
-            val port = binding.editPort.text.toString()
+            val port = binding.editPort.text.toString().toIntOrNull() ?: 0
+            val pcName = "PC $ip" // или можно имя из EditText, если есть
 
-            val sharedPref = requireContext().getSharedPreferences("PC_PREFS", Context.MODE_PRIVATE)
-            with(sharedPref.edit()) {
-                putString("mode", mode)
-                putString("mouse_mode", mouseMode)
-                putString("ip", ip)
-                putString("port", port)
-                apply()
+            val updatedPC = PreferencesFuncs.PC(
+                name = pcName,
+                ip = ip,
+                port = port,
+                mode = modeIndex,
+                mouseMode = mouseModeIndex
+            )
+
+            val pcId = arguments?.getInt("pcId") ?: -1
+            if (pcId != -1) {
+                PreferencesFuncs().updatePC(requireContext(), pcId, updatedPC)
             }
+
             findNavController().popBackStack()
         }
     }

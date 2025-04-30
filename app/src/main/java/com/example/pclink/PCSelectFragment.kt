@@ -5,8 +5,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -46,6 +44,10 @@ class PCSelectFragment : Fragment() {
                     putInt("pcId", id)
                 }
                 findNavController().navigate(R.id.action_PCSelectFragment_to_PCSettingsFragment, bundle)
+            },
+            onExtraClick = { id ->
+                val dialog = ExtraDialogFragment.newInstance(id)
+                dialog.show(parentFragmentManager, "ExtraDialog")
             }
         )
 

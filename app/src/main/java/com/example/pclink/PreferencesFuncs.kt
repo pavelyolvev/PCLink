@@ -25,7 +25,14 @@ class PreferencesFuncs {
             putString("pc_list", json)
         }
     }
-
+    // Обновляет ПК по индексу в списке
+    fun updatePC(context: Context, id: Int, updatedPC: PC) {
+        val list = loadAllPCsPrefs(context).toMutableList()
+        if (id in list.indices) {
+            list[id] = updatedPC
+            savePCList(context, list)
+        }
+    }
     // Добавляет новый ПК в список и сохраняет
     fun saveNewPC(context: Context, newPC: PC) {
         val currentList = loadAllPCsPrefs(context).toMutableList()
