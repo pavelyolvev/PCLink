@@ -74,16 +74,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-        private fun sendCommand(command: String) {
-            thread {
-                try {
-                    writer?.println(command)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
-
         override fun onDestroy() {
             super.onDestroy()
             try {

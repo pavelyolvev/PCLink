@@ -13,18 +13,51 @@
         android:text="Информация о ПК"
         android:textSize="18sp"
         android:textStyle="bold" />
+    <TextView
+        android:id="@+id/tvPcInfoName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="18sp"
+        android:textStyle="bold" />
+    <TextView
+        android:id="@+id/tvPcInfoIP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <Button
-        android:id="@+id/btnAction1"
+        android:id="@+id/btnActionOn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Действие 1"
+        android:text="Включить ПК"
         android:layout_marginTop="16dp" />
+    <Button
+        android:id="@+id/btnActionOff"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Выключить ПК"
+         />
+    <Button
+        android:id="@+id/btnActionSleep"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Режим сна"
+         />
+    <Button
+        android:id="@+id/btnActionRestart"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Перезагрузка ПК"
+         />
+
 
     <Button
         android:id="@+id/btnClose"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Закрыть"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="16dp" />
 </LinearLayout>
