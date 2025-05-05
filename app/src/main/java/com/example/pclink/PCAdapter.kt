@@ -35,7 +35,7 @@ class PCListAdapter(
     inner class PCViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nameText: TextView = itemView.findViewById(R.id.pcName)
         val statusText: TextView = itemView.findViewById(R.id.pcStatus)
-        val btnConnect: Button = itemView.findViewById(R.id.btnConnect)
+        val btnConnect: ImageButton = itemView.findViewById(R.id.btnConnect)
         val btnSettings: ImageButton = itemView.findViewById(R.id.btnSettings)
         val btnExtra: ImageButton = itemView.findViewById(R.id.btnExtraFunctions)
     }
@@ -77,7 +77,7 @@ class PCListAdapter(
 
                 withContext(Dispatchers.Main) {
                     if (!isReachable) {
-                        holder.statusText.text = "PC оффлайн"
+                        holder.statusText.text = "Не в сети"
                         holder.statusText.setTextColor(Color.RED)
                     } else if (!isAppRunning) {
                         holder.statusText.text = "PCLink не запущен"

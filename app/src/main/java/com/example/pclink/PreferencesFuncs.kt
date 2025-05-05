@@ -13,7 +13,8 @@ class PreferencesFuncs {
         val ip: String,
         val port: Int,
         val mode: Int,
-        val mouseMode: Int
+        val mouseMode: Int,
+        val macAdress: String
     )
 
     // Сохраняет список ПК в SharedPreferences
@@ -37,6 +38,12 @@ class PreferencesFuncs {
     fun saveNewPC(context: Context, newPC: PC) {
         val currentList = loadAllPCsPrefs(context).toMutableList()
         currentList.add(newPC)
+        savePCList(context, currentList)
+    }
+
+    fun removePC(context: Context, id: Int){
+        val currentList = loadAllPCsPrefs(context).toMutableList()
+        currentList.removeAt(id)
         savePCList(context, currentList)
     }
 

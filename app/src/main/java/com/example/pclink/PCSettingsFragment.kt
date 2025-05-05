@@ -19,7 +19,8 @@ class PCSettingsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val isNew = arguments?.getBoolean("isNew") ?: false
+        if(arguments?.getInt("pcId") == -1)
+            isNew = true
 
     }
 
@@ -34,8 +35,48 @@ class PCSettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         super.onViewCreated(view, savedInstanceState)
-//        val backBtn: ImageButton = view.findViewById(R.id.btnBack)
         val saveBtn: Button = view.findViewById(R.id.btnSave)
+        val delBtn: Button = view.findViewById(R.id.btnDelete)
+        if (!isNew) {
+            loadSaved()
+
+        } else{
+            delBtn.visibility = View.GONE
+        }
+
+        saveBtn.setOnClickListener {
+            val modeIndex = binding.spinnerMode.selectedItemPosition
+            val mouseModeIndex = binding.spinnerMouseMode.selectedItemPosition
+            val ip = binding.editIP.text.toString()
+            val port = binding.editPort.text.toString().toIntOrNull() ?: 0
+            val pcName = binding.editName.text.toString()
+            val mac = binding.editMac.text.toString()
+
+            val updatedPC = PreferencesFuncs.PC(
+                name = pcName,
+                ip = ip,
+                port = port,
+                mode = modeIndex,
+                mouseMode = mouseModeIndex,
+                macAdress = mac
+            )
+
+            val pcId = arguments?.getInt("pcId") ?: -1
+            if (!isNew) {
+                PreferencesFuncs().updatePC(requireContext(), pcId, updatedPC)
+            } else PreferencesFuncs().saveNewPC(requireContext(), updatedPC)
+
+            findNavController().popBackStack()
+        }
+        delBtn.setOnClickListener {
+            val pcId = arguments?.getInt("pcId") ?: -1
+            if (!isNew && pcId != -1) {
+                PreferencesFuncs().removePC(requireContext(), pcId)
+            }
+            findNavController().popBackStack()
+        }
+    }
+    fun loadSaved(){
         val sharedPref = requireContext().getSharedPreferences("PC_PREFS", Context.MODE_PRIVATE)
         binding.spinnerMode.setSelection(
             resources.getStringArray(R.array.mode_options).indexOf(sharedPref.getString("mode", "Тачпад"))
@@ -45,34 +86,5 @@ class PCSettingsFragment : Fragment() {
         )
         binding.editIP.setText(sharedPref.getString("ip", ""))
         binding.editPort.setText(sharedPref.getString("port", ""))
-
-        if (isNew) saveBtn.visibility = View.VISIBLE
-
-//        backBtn.setOnClickListener {
-//            findNavController().popBackStack()
-//        }
-
-        saveBtn.setOnClickListener {
-            val modeIndex = binding.spinnerMode.selectedItemPosition
-            val mouseModeIndex = binding.spinnerMouseMode.selectedItemPosition
-            val ip = binding.editIP.text.toString()
-            val port = binding.editPort.text.toString().toIntOrNull() ?: 0
-            val pcName = "PC $ip" // или можно имя из EditText, если есть
-
-            val updatedPC = PreferencesFuncs.PC(
-                name = pcName,
-                ip = ip,
-                port = port,
-                mode = modeIndex,
-                mouseMode = mouseModeIndex
-            )
-
-            val pcId = arguments?.getInt("pcId") ?: -1
-            if (pcId != -1) {
-                PreferencesFuncs().updatePC(requireContext(), pcId, updatedPC)
-            }
-
-            findNavController().popBackStack()
-        }
     }
 }

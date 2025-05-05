@@ -67,9 +67,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.fab.setOnClickListener { view ->
             val bundle = Bundle().apply {
-                putBoolean("isNew", true)
+                putInt("pcId", -1)
             }
-            navController.navigate(R.id.action_PCSelectFragment_to_PCNewFragment, bundle)
+            navController.navigate(R.id.action_PCSelectFragment_to_PCSettingsFragment, bundle)
 
         }
     }

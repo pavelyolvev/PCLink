@@ -5,14 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:background="#888888"
+    android:background="@drawable/pc_item_background"
     android:padding="16dp"
     android:layout_marginBottom="16dp">
-
-    <ImageView
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:background="#cccccc" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -25,27 +20,40 @@
             android:id="@+id/pcName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Имя ПК"
+            android:text="длинное длинное имя ПК"
             android:textColor="@android:color/white" />
 
         <TextView
             android:id="@+id/pcStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Онлайн"
+            android:text="Поиск..."
             android:textColor="@android:color/white" />
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="#cccccc" />
+
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        >
 
-        <Button
+
+
+        <ImageButton
+            style="@style/ImgButton"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
             android:id="@+id/btnConnect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Подключиться" />
+            android:text="Подключиться"
+            android:scaleType="fitCenter"
+            app:srcCompat="@android:drawable/ic_media_play"
+            />
 
     </LinearLayout>
 
@@ -55,15 +63,13 @@
         android:orientation="vertical">
 
         <ImageButton
+            style="@style/ImgButton"
             android:id="@+id/btnSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             app:srcCompat="@android:drawable/ic_menu_manage" />
 
         <ImageButton
+            style="@style/ImgButton"
             android:id="@+id/btnExtraFunctions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             app:srcCompat="@android:drawable/ic_dialog_dialer" />
     </LinearLayout>
 </LinearLayout>
