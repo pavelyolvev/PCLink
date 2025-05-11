@@ -12,9 +12,10 @@ class PreferencesFuncs {
         val name: String,
         val ip: String,
         val port: Int,
+        var authCode: Int,
         val mode: Int,
         val mouseMode: Int,
-        val macAdress: String
+        var macAdress: String
     )
 
     // Сохраняет список ПК в SharedPreferences

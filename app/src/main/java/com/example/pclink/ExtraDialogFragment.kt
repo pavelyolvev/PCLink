@@ -7,6 +7,9 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ExtraDialogFragment : DialogFragment() {
     val prefs = PreferencesFuncs()
@@ -30,22 +33,39 @@ class ExtraDialogFragment : DialogFragment() {
 
         val pc = prefs.loadPCPref(requireContext(), pcId)
 
-        // Пример установки текста
         val pcName = pc?.name
         val pcIp = pc?.ip
         val pcPort = pc?.port
+        val pcMac = pc?.macAdress
 
+        // установка текста
         view.findViewById<TextView>(R.id.tvPcInfoName).text = pcName
         view.findViewById<TextView>(R.id.tvPcInfoIP).text = pcIp
 
-        // Пример действий
         view.findViewById<Button>(R.id.btnActionOn).setOnClickListener {
-            if (pcIp != null && pcPort != null) {
-                net.onConnected = {
-                    net.sendCommand("AUTH")
+            if (pcMac != null) {
+                val broadcastIp = net.getBroadcastAddress(requireContext())
+                if (broadcastIp != null) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val success = net.sendWakeOnLan(pcMac, broadcastIp)
+                        if (success) {
+                            Toast.makeText(requireContext(), "ПК пробуждён", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), "Ошибка при отправке WoL", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Не удалось определить broadcast-адрес", Toast.LENGTH_SHORT).show()
                 }
-                net.connect(pcIp, pcPort)
-                net.sendCommand("SHUTDOWN")
+            }
+            dismiss()
+        }
+
+        view.findViewById<Button>(R.id.btnActionOff).setOnClickListener {
+            lifecycleScope.launch {
+                if (pcIp != null && pcPort != null) {
+                    net.requestAccess(pcIp, pcPort, "PC_SHUTDOWN")
+                }
             }
             Toast.makeText(requireContext(), "Выполнено действие для ПК $pcId", Toast.LENGTH_SHORT).show()
             dismiss()

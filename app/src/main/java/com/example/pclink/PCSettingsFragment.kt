@@ -1,13 +1,14 @@
 package com.example.pclink
 
-import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.ImageButton
+import android.widget.Spinner
 import androidx.navigation.fragment.findNavController
 import com.example.pclink.databinding.PcsettingsBinding
 
@@ -16,11 +17,15 @@ class PCSettingsFragment : Fragment() {
     private var _binding: PcsettingsBinding? = null
     private val binding get() = _binding!!
     private var isNew: Boolean = false
+    private var pcId: Int = -1
+    private var loadedCode: Int = -1;
+    val prefs = PreferencesFuncs()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if(arguments?.getInt("pcId") == -1)
             isNew = true
+        else pcId = arguments?.getInt("pcId")!!
 
     }
 
@@ -32,6 +37,17 @@ class PCSettingsFragment : Fragment() {
         return binding.root
     }
 
+    fun setSpinnerAdapter(spinner: Spinner, itemArrayR: Int){
+        val adapterMode = ArrayAdapter.createFromResource(
+            requireContext(),
+            itemArrayR,
+            R.layout.spinner_item
+        )
+
+// Задаём стиль выпадающего списка
+        adapterMode.setDropDownViewResource(R.layout.spinner_item)
+        spinner.adapter = adapterMode
+    }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         super.onViewCreated(view, savedInstanceState)
@@ -56,6 +72,7 @@ class PCSettingsFragment : Fragment() {
                 name = pcName,
                 ip = ip,
                 port = port,
+                authCode = -1,
                 mode = modeIndex,
                 mouseMode = mouseModeIndex,
                 macAdress = mac
@@ -63,10 +80,25 @@ class PCSettingsFragment : Fragment() {
 
             val pcId = arguments?.getInt("pcId") ?: -1
             if (!isNew) {
+                Log.d("DEBUG============", "PC UPDATE")
                 PreferencesFuncs().updatePC(requireContext(), pcId, updatedPC)
-            } else PreferencesFuncs().saveNewPC(requireContext(), updatedPC)
+                findNavController().popBackStack()
+            } else {
+                // Показываем диалог авторизации
 
-            findNavController().popBackStack()
+                Log.d("DEBUG============", "AUTHSTART SEND")
+                val dialog = PcAuthDialog.newInstance(updatedPC) { authCode, mac ->
+                    // Этот колбэк вызывается после успешной авторизации
+                    updatedPC.authCode = authCode // Сохраняем полученный authCode в updatedPC
+                    Log.d("DEBUG============", mac)
+                    updatedPC.macAdress = mac
+                    PreferencesFuncs().saveNewPC(requireContext(), updatedPC) // Сохраняем объект PC
+                    findNavController().popBackStack() // Закрываем текущий экран
+                }
+
+                dialog.show(parentFragmentManager, "pc auth")
+            }
+
         }
         delBtn.setOnClickListener {
             val pcId = arguments?.getInt("pcId") ?: -1
@@ -76,15 +108,32 @@ class PCSettingsFragment : Fragment() {
             findNavController().popBackStack()
         }
     }
-    fun loadSaved(){
-        val sharedPref = requireContext().getSharedPreferences("PC_PREFS", Context.MODE_PRIVATE)
-        binding.spinnerMode.setSelection(
-            resources.getStringArray(R.array.mode_options).indexOf(sharedPref.getString("mode", "Тачпад"))
-        )
-        binding.spinnerMouseMode.setSelection(
-            resources.getStringArray(R.array.mouse_mode_options).indexOf(sharedPref.getString("mouse_mode", "Тачпад"))
-        )
-        binding.editIP.setText(sharedPref.getString("ip", ""))
-        binding.editPort.setText(sharedPref.getString("port", ""))
+    fun loadSaved() {
+        val pc = prefs.loadPCPref(requireContext(), pcId)
+        if (pc != null) {
+            loadedCode = pc.authCode
+            val modeOptions = resources.getStringArray(R.array.mode_options)
+            val mouseModeOptions = resources.getStringArray(R.array.mouse_mode_options)
+
+            // Проверяем и устанавливаем значение для первого spinner (mode)
+            if (pc.mode in modeOptions.indices) {
+                binding.spinnerMode.setSelection(pc.mode)
+            } else {
+                Log.e("PCSettingsFragment", "Invalid mode index: ${pc.mode}")
+                binding.spinnerMode.setSelection(0) // Устанавливаем дефолтное значение
+            }
+
+            // Проверяем и устанавливаем значение для второго spinner (mouseMode)
+            if (pc.mouseMode in mouseModeOptions.indices) {
+                binding.spinnerMouseMode.setSelection(pc.mouseMode)
+            } else {
+                Log.e("PCSettingsFragment", "Invalid mouseMode index: ${pc.mouseMode}")
+                binding.spinnerMouseMode.setSelection(0) // Устанавливаем дефолтное значение
+            }
+            binding.editIP.setText(pc.ip)
+            binding.editPort.setText(pc.port.toString())
+            binding.editName.setText(pc.name)
+            binding.editMac.setText(pc.macAdress)
+        }
     }
 }

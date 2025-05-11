@@ -37,7 +37,7 @@ class PCSelectFragment : Fragment() {
                 val bundle = Bundle().apply {
                     putInt("pcId", id)
                 }
-                findNavController().navigate(R.id.action_PCSelectFragment_to_PCStreamFragment, bundle)
+                findNavController().navigate(R.id.action_PCSelectFragment_to_loadingScreenFragment, bundle)
             },
             onSettingsClick = { id ->
                 val bundle = Bundle().apply {

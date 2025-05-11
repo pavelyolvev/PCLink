@@ -6,6 +6,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textColor">#E6E6E6</item>
+        <item name="android:textAlignment">textEnd</item>
     </style>
 
     <style name="ImgButton">
@@ -14,6 +15,25 @@
         <item name="android:layout_margin">5dp</item>
         <item name="android:background">@drawable/button</item>
         <item name="android:buttonCornerRadius">10dp</item>
+    </style>
+
+    <style name="setting_item_style">
+        <item name="android:paddingHorizontal">10dp</item>
+        <item name="android:background">@drawable/setting_item_background</item>
+        <item name="android:layout_marginVertical">2dp</item>
+    </style>
+    <style name="ToolbarTheme" parent="@style/ThemeOverlay.AppCompat.ActionBar">
+        <!-- Customize color of navigation drawer icon and back arrow -->
+        <item name="colorControlNormal">@color/toolbar_color_control_normal</item>
+    </style>
+    <style name="ToolbarWithBackArrowColor" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:navigationIcon">?attr/homeAsUpIndicator</item>
+        <item name="android:tint">@color/toolbar_color_control_normal</item>
+    </style>
+    <style name="MyThemeOverlay_Toolbar" parent="ThemeOverlay.MaterialComponents.Toolbar.Primary">
+
+        <!-- This attributes is used by navigation icon and overflow icon -->
+        <item name="colorOnPrimary">@color/toolbar_color_control_normal</item>
     </style>
 <!--    <style name="BGColor">-->
 <!--        <item name="android:background">#ffffff</item>-->

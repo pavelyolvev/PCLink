@@ -1,6 +1,9 @@
 package com.example.pclink
 
 import android.annotation.SuppressLint
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import com.google.android.material.snackbar.Snackbar
@@ -16,11 +19,14 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.NavHostFragment
 import com.example.pclink.databinding.ActivityMainBinding
 import java.io.PrintWriter
 import java.net.Socket
 import kotlin.concurrent.thread
+import androidx.core.view.size
+import androidx.core.view.get
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,9 +55,12 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
         val navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            if(destination.id == R.id.PCStreamFragment){
+            if(destination.id == R.id.PCStreamFragment || destination.id == R.id.loadingScreenFragment){
                 binding.toolbar.visibility = View.GONE
-            } else binding.toolbar.visibility = View.VISIBLE
+            } else {
+                binding.toolbar.visibility = View.VISIBLE
+
+            }
             // Показывать FAB только на PCSelectFragment
             if (destination.id == R.id.PCSelectFragment) {
                 binding.fab.show()
@@ -85,6 +94,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
+        for (i in 0 until menu.size) {
+            menu[i].icon?.setTint(ContextCompat.getColor(this, R.color.white))
+        }
         return true
     }
 
@@ -97,7 +109,16 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
+//    override fun onBackPressed() {
+//        val navController = findNavController(R.id.nav_host_fragment_content_main)
+//        val currentFragment = navController.findDestination(R.id.PCStreamFragment)
+//
+//        if (navController.currentDestination) {
+//            // Выполнить пользовательское поведение кнопки «Назад»
+//        } else {
+//            super.onBackPressed()
+//        }
+//    }
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration)

@@ -10,8 +10,8 @@
             android:id="@+id/action_PCSelectFragment_to_PCSettingsFragment"
             app:destination="@id/PCSettingsFragment" />
         <action
-            android:id="@+id/action_PCSelectFragment_to_PCStreamFragment"
-            app:destination="@id/PCStreamFragment" />
+            android:id="@+id/action_PCSelectFragment_to_loadingScreenFragment"
+            app:destination="@id/loadingScreenFragment" />
     </fragment>
     <fragment
         android:id="@+id/PCSettingsFragment"
@@ -28,5 +28,13 @@
         <argument
             android:name="pcId"
             app:argType="integer" />
+    </fragment>
+    <fragment
+        android:id="@+id/loadingScreenFragment"
+        android:name="com.example.pclink.LoadingScreenFragment"
+        android:label="LoadingScreenFragment" >
+        <action
+            android:id="@+id/action_loadingScreenFragment_to_PCStreamFragment"
+            app:destination="@id/PCStreamFragment" />
     </fragment>
 </navigation>

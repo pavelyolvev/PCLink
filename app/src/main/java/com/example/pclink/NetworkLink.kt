@@ -1,7 +1,10 @@
 package com.example.pclink;
 
+import android.R
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.wifi.WifiManager
 import android.util.Log
 import android.widget.ImageView
 import kotlinx.coroutines.CoroutineScope
@@ -10,6 +13,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable.isActive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
 import java.net.DatagramPacket
@@ -20,11 +26,14 @@ import java.net.NetworkInterface
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 import java.net.SocketException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class NetworkLink {
     private var socket: DatagramSocket? = null
     private var serverAddress: InetAddress? = null
     private var serverPort: Int = 0
+
 
     var onConnected: (() -> Unit)? = null // Колбэк для уведомления о готовности соединения
 
@@ -42,19 +51,126 @@ class NetworkLink {
         }.start()
     }
 
-    fun sendCommand(command: String) {
+    fun sendCommand(id: Int, command: String, parameters: Array<String> = emptyArray(), responseRequired: Boolean = false) {
         Thread {
             try {
-                val buffer = command.toByteArray(Charsets.UTF_8)
+                val json = JSONObject().apply {
+                    put("id", id)
+                    put("message", command)
+                    put("parameters", JSONArray(parameters))
+                    put("response", responseRequired)
+                }
+                val buffer = json.toString().toByteArray()
                 val packet = DatagramPacket(buffer, buffer.size, serverAddress, serverPort)
                 socket?.send(packet)
+
+            } catch (e: SocketTimeoutException) {
+                e.printStackTrace()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }.start()
     }
+    suspend fun requestAccess(ip: String, port: Int, request: String, parameters: Array<String> = emptyArray(), timeout: Int = 2000): JSONObject = withContext(Dispatchers.IO) {
+        val id = 0
+        val responseRequired = true
+        var socket: DatagramSocket? = null
 
+        try {
+            socket = DatagramSocket()
+            socket.soTimeout = timeout
+            val serverAddress = InetAddress.getByName(ip)
 
+            val json = JSONObject().apply {
+                put("id", id)
+                put("message", request)
+                put("parameters", JSONArray(parameters))
+                put("response", responseRequired)
+            }
+
+            val buffer = json.toString().toByteArray()
+            val packet = DatagramPacket(buffer, buffer.size, serverAddress, port)
+            socket.send(packet)
+
+            val receiveBuffer = ByteArray(1024)
+            val responsePacket = DatagramPacket(receiveBuffer, receiveBuffer.size)
+            socket.receive(responsePacket)
+
+            val responseJson = String(responsePacket.data, 0, responsePacket.length)
+            val response = JSONObject(responseJson)
+            response
+        } catch (e: SocketTimeoutException) {
+            JSONObject().apply {
+                put("message", "TIMEOUT")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            JSONObject().apply {
+                put("message", "SOCKET_ERROR")
+            }
+        } finally {
+            socket?.close()
+        }
+    }
+
+    fun sendWakeOnLan(mac: String, ip: String, port: Int = 9): Boolean {
+        return try {
+            val macBytes = getMacBytes(mac)
+            val bytes = ByteArray(6 + 16 * macBytes.size)
+
+            // Префикс — 6 байт 0xFF
+            for (i in 0 until 6) {
+                bytes[i] = 0xFF.toByte()
+            }
+
+            // Повторяем MAC 16 раз
+            for (i in 6 until bytes.size step macBytes.size) {
+                System.arraycopy(macBytes, 0, bytes, i, macBytes.size)
+            }
+
+            val address = InetAddress.getByName(ip)
+            val packet = DatagramPacket(bytes, bytes.size, address, port)
+            DatagramSocket().use { socket ->
+                socket.send(packet)
+            }
+
+            println("WoL пакет отправлен на $mac по адресу $ip:$port")
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+    fun getBroadcastAddress(context: Context): String? {
+        val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val dhcp = wifi.dhcpInfo ?: return null
+
+        val ipAddress = dhcp.ipAddress
+        val subnetMask = dhcp.netmask
+
+        val broadcast = (ipAddress and subnetMask.inv())
+        val quads = ByteArray(4)
+        for (k in 0..3) {
+            quads[k] = (broadcast shr (k * 8) and 0xFF).toByte()
+        }
+
+        return try {
+            InetAddress.getByAddress(quads).hostAddress
+        } catch (e: UnknownHostException) {
+            null
+        }
+    }
+    private fun getMacBytes(macStr: String): ByteArray {
+        val bytes = ByteArray(6)
+        val hex = macStr.split(":")
+        if (hex.size != 6) {
+            throw IllegalArgumentException("Неверный MAC-адрес: $macStr")
+        }
+        for (i in hex.indices) {
+            bytes[i] = hex[i].toInt(16).toByte()
+        }
+        return bytes
+    }
     fun disconnect() {
         socket?.close()
     }
