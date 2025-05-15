@@ -8,13 +8,16 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageView
-import androidx.navigation.fragment.findNavController
+import android.widget.Toast
+import androidx.appcompat.widget.AppCompatImageButton
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.lifecycle.lifecycleScope
 import com.example.pclink.databinding.PcsettingsBinding
+import com.example.pclink.touchpad.Keyboard
 import com.example.pclink.touchpad.Touchpad
-import java.util.Timer
-import java.util.TimerTask
-import kotlin.math.abs
+import kotlinx.coroutines.launch
 
 class PCStreamFragment : Fragment() {
 
@@ -70,15 +73,89 @@ class PCStreamFragment : Fragment() {
 
         val tp = Touchpad(imageView, net)
         tp.touchPad()
+
+
+
+        val buttonPc = view.findViewById<AppCompatImageButton>(R.id.draggableButtonPC)
+        val buttonKeyboard = view.findViewById<AppCompatImageButton>(R.id.draggableButtonKeyboard)
+        val hiddenInput = view.findViewById<EditText>(R.id.hiddenInput)
+        val kb = Keyboard(net, view, buttonKeyboard, hiddenInput, requireContext())
+        kb.setListener()
+
+        setDraggableButton(view, buttonPc, ::onDraggableButtonPcClick, kb)
+        setDraggableButton(view, buttonKeyboard, ::onDraggableButtonKeyBoardClick, kb)
     }
     override fun onDestroyView() {
         super.onDestroyView()
-        net.disconnect()
+        val pc = prefs.loadPCPref(requireContext(), pcId)
+        val serverIpForCommands = pc?.ip
+        val serverPortForCommands = pc?.port // Должен быть 12312
+        if (serverIpForCommands != null && serverPortForCommands != null) {
+            lifecycleScope.launch {
+                net.requestAccess(serverIpForCommands, serverPortForCommands, "END")
+            }
+            net.disconnect()
+        }
     }
 
 
 
+    @SuppressLint("ClickableViewAccessibility")
+    fun setDraggableButton(view: View, appCompatImageButton: AppCompatImageButton, onDraggableButtonClick: () -> Unit, kb:Keyboard){
+        val layout = view.findViewById<ConstraintLayout>(R.id.btnRootView)
 
+        layout.post {
+            val screenWidth = layout.width
+            val screenHeight = layout.height
+
+            var dX = 0f
+            var dY = 0f
+            var isDragging = false
+
+            appCompatImageButton.setOnTouchListener { view, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        dX = view.x - event.rawX
+                        dY = view.y - event.rawY
+                        isDragging = false
+                    }
+
+                    MotionEvent.ACTION_MOVE -> {
+                        val newX = event.rawX + dX
+                        val newY = event.rawY + dY
+
+                        val maxX = screenWidth - view.width
+                        val maxY = screenHeight - view.height
+
+                        if (maxX < 0 || maxY < 0) return@setOnTouchListener true
+
+                        val clampedX = newX.coerceIn(0f, maxX.toFloat())
+                        val clampedY = newY.coerceIn(0f, maxY.toFloat())
+
+                        view.animate().x(clampedX).y(clampedY).setDuration(0).start()
+
+                        isDragging = true
+                    }
+
+                    MotionEvent.ACTION_UP -> {
+                        if (!isDragging) {
+                            onDraggableButtonClick()
+                            kb.openKeyboard()
+                        }
+                    }
+                }
+                true
+            }
+        }
+    }
+    private fun onDraggableButtonPcClick() {
+        Toast.makeText(requireContext(), "Кнопка пк нажата", Toast.LENGTH_SHORT).show()
+        // Здесь можно вызвать любую вашу логику
+    }
+    private fun onDraggableButtonKeyBoardClick() {
+        Toast.makeText(requireContext(), "Кнопка клавиатуры нажата", Toast.LENGTH_SHORT).show()
+        // Здесь можно вызвать любую вашу логику
+    }
     override fun onResume() {
         super.onResume()
         net.startReceiving(imageView)

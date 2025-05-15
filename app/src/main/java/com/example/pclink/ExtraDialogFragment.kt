@@ -3,6 +3,7 @@ package com.example.pclink
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -10,6 +11,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ExtraDialogFragment : DialogFragment() {
     val prefs = PreferencesFuncs()
@@ -44,14 +46,20 @@ class ExtraDialogFragment : DialogFragment() {
 
         view.findViewById<Button>(R.id.btnActionOn).setOnClickListener {
             if (pcMac != null) {
-                val broadcastIp = net.getBroadcastAddress(requireContext())
+                val broadcastIp = net.getBroadcastAddress()
+
+                if (broadcastIp != null) {
+                    Log.d("DEBUG===========", broadcastIp)
+                }
                 if (broadcastIp != null) {
                     lifecycleScope.launch(Dispatchers.IO) {
                         val success = net.sendWakeOnLan(pcMac, broadcastIp)
-                        if (success) {
-                            Toast.makeText(requireContext(), "ПК пробуждён", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(requireContext(), "Ошибка при отправке WoL", Toast.LENGTH_SHORT).show()
+                        withContext(Dispatchers.Main) {
+                            if (success) {
+                                Toast.makeText(requireContext(), "ПК пробуждён", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(requireContext(), "Ошибка при отправке WoL", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 } else {
@@ -65,6 +73,24 @@ class ExtraDialogFragment : DialogFragment() {
             lifecycleScope.launch {
                 if (pcIp != null && pcPort != null) {
                     net.requestAccess(pcIp, pcPort, "PC_SHUTDOWN")
+                }
+            }
+            Toast.makeText(requireContext(), "Выполнено действие для ПК $pcId", Toast.LENGTH_SHORT).show()
+            dismiss()
+        }
+        view.findViewById<Button>(R.id.btnActionSleep).setOnClickListener {
+            lifecycleScope.launch {
+                if (pcIp != null && pcPort != null) {
+                    net.requestAccess(pcIp, pcPort, "PC_SLEEP")
+                }
+            }
+            Toast.makeText(requireContext(), "Выполнено действие для ПК $pcId", Toast.LENGTH_SHORT).show()
+            dismiss()
+        }
+        view.findViewById<Button>(R.id.btnActionRestart).setOnClickListener {
+            lifecycleScope.launch {
+                if (pcIp != null && pcPort != null) {
+                    net.requestAccess(pcIp, pcPort, "PC_RESTART")
                 }
             }
             Toast.makeText(requireContext(), "Выполнено действие для ПК $pcId", Toast.LENGTH_SHORT).show()

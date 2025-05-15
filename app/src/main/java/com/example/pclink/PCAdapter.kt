@@ -76,15 +76,15 @@ class PCListAdapter(
                 Log.d("NETWORKTEST", "isAppRunning: $isAppRunning")
 
                 withContext(Dispatchers.Main) {
-                    if (!isReachable) {
-                        holder.statusText.text = "Не в сети"
-                        holder.statusText.setTextColor(Color.RED)
-                    } else if (!isAppRunning) {
-                        holder.statusText.text = "PCLink не запущен"
-                        holder.statusText.setTextColor(Color.YELLOW)
-                    } else {
+                    if (isAppRunning) {
                         holder.statusText.text = "Онлайн"
                         holder.statusText.setTextColor(Color.GREEN)
+                    } else if (!isReachable) {
+                        holder.statusText.text = "Не в сети"
+                        holder.statusText.setTextColor(Color.RED)
+                    } else {
+                        holder.statusText.text = "PCLink не запущен"
+                        holder.statusText.setTextColor(Color.YELLOW)
                     }
                 }
             } catch (e: Exception) {

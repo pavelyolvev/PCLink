@@ -28,6 +28,7 @@ import java.net.InetSocketAddress
 import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import java.nio.ByteBuffer
 
 class NetworkLink {
     private var socket: DatagramSocket? = null
@@ -141,25 +142,32 @@ class NetworkLink {
             false
         }
     }
-    fun getBroadcastAddress(context: Context): String? {
-        val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        val dhcp = wifi.dhcpInfo ?: return null
+    fun getBroadcastAddress(): String? {
+        try {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            for (intf in interfaces) {
+                if (!intf.isUp || intf.isLoopback) continue
 
-        val ipAddress = dhcp.ipAddress
-        val subnetMask = dhcp.netmask
+                for (addr in intf.interfaceAddresses) {
+                    val inetAddr = addr.address
+                    if (inetAddr.isLoopbackAddress || inetAddr !is Inet4Address) continue
 
-        val broadcast = (ipAddress and subnetMask.inv())
-        val quads = ByteArray(4)
-        for (k in 0..3) {
-            quads[k] = (broadcast shr (k * 8) and 0xFF).toByte()
+                    val prefixLength = addr.networkPrefixLength.toInt()
+                    val mask = (0xffffffff).toInt() shl (32 - prefixLength)
+
+                    val ip = ByteBuffer.wrap(inetAddr.address).int
+                    val broadcast = ip or mask.inv()
+
+                    val bytes = ByteBuffer.allocate(4).putInt(broadcast).array()
+                    return InetAddress.getByAddress(bytes).hostAddress
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-        return try {
-            InetAddress.getByAddress(quads).hostAddress
-        } catch (e: UnknownHostException) {
-            null
-        }
+        return null
     }
+
     private fun getMacBytes(macStr: String): ByteArray {
         val bytes = ByteArray(6)
         val hex = macStr.split(":")

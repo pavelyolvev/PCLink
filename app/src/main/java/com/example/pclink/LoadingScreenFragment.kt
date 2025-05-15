@@ -39,18 +39,19 @@ class LoadingScreenFragment : Fragment() {
         val serverIpForCommands = pc?.ip
         val serverPortForCommands = pc?.port
         val authCode = pc?.authCode
+        val mode = pc?.mode
         var serverResponse: JSONObject
         super.onViewCreated(view, savedInstanceState)
         if (serverIpForCommands != null && serverPortForCommands != null && authCode != null) {
             lifecycleScope.launch {
-                serverResponse = net.requestAccess(serverIpForCommands, serverPortForCommands, "REQUEST_ACCESS", arrayOf(authCode.toString()))
+                serverResponse = net.requestAccess(serverIpForCommands, serverPortForCommands, "REQUEST_ACCESS", arrayOf(authCode.toString(), mode.toString()))
                 if(serverResponse.getString("message") == "ACCESS_GRANTED") {
                     val bundle = Bundle().apply {
                         putInt("pcId", pcId)
                     }
                     findNavController().navigate(R.id.action_loadingScreenFragment_to_PCStreamFragment, bundle, navOptions {
                         popUpTo(R.id.loadingScreenFragment) {
-                            inclusive = true // удалит LoadingScreenFragment из стека
+                            inclusive = true // удаление LoadingScreenFragment из стека
                         }
                     })
                 } else if (serverResponse.getString("message") == "ACCESS_DENIED"){

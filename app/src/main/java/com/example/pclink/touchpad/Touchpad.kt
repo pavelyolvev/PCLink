@@ -65,7 +65,7 @@ class Touchpad(val imageView: ImageView, val net: NetworkLink) {
                         val dy = event.getY(0) - lastY
 
                         if (abs(dx) > threshold || abs(dy) > threshold) {
-                            net.sendCommand(2, "MOVE:${dx.toInt()},${dy.toInt()}")
+                            net.sendCommand(2, "MOVE", arrayOf(dx.toInt().toString(), dy.toInt().toString()))
                             lastX = event.getX(0)
                             lastY = event.getY(0)
                         }
@@ -84,10 +84,10 @@ class Touchpad(val imageView: ImageView, val net: NetworkLink) {
 
                         if (currentTime - lastScrollTime > scrollIntervalMs) {
                             if (abs(deltaX) > threshold) {
-                                net.sendCommand(4, "HSCROLL:${(-deltaX).toInt()}")
+                                net.sendCommand(4, "HSCROLL", arrayOf((-deltaX).toInt().toString()))
                             }
                             if (abs(deltaY) > threshold) {
-                                net.sendCommand(3, "SCROLL:${(-deltaY).toInt()}")
+                                net.sendCommand(3, "SCROLL", arrayOf((-deltaY).toInt().toString()))
                             }
                             // Запоминаем дельты для инерции
                             scrollVelocityX = deltaX
@@ -129,10 +129,10 @@ class Touchpad(val imageView: ImageView, val net: NetworkLink) {
                 }
 
                 if (abs(scrollVelocityX) >= 1f) {
-                    net.sendCommand(4, "HSCROLL:${(-scrollVelocityX).toInt()}")
+                    net.sendCommand(4, "HSCROLL", arrayOf((-scrollVelocityX).toInt().toString()))
                 }
                 if (abs(scrollVelocityY) >= 1f) {
-                    net.sendCommand(3, "SCROLL:${(-scrollVelocityY).toInt()}")
+                    net.sendCommand(3, "SCROLL", arrayOf((-scrollVelocityY).toInt().toString()))
                 }
             }
         }, 0, scrollIntervalMs)

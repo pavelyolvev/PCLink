@@ -81,6 +81,7 @@ class PCSettingsFragment : Fragment() {
             val pcId = arguments?.getInt("pcId") ?: -1
             if (!isNew) {
                 Log.d("DEBUG============", "PC UPDATE")
+                updatedPC.authCode = loadedCode
                 PreferencesFuncs().updatePC(requireContext(), pcId, updatedPC)
                 findNavController().popBackStack()
             } else {
