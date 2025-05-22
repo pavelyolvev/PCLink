@@ -15,6 +15,7 @@ import androidx.appcompat.widget.AppCompatImageButton
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
 import com.example.pclink.databinding.PcsettingsBinding
+import com.example.pclink.streaming.ScreenReceiver
 import com.example.pclink.touchpad.Keyboard
 import com.example.pclink.touchpad.Touchpad
 import kotlinx.coroutines.launch
@@ -72,8 +73,10 @@ class PCStreamFragment : Fragment() {
         }
 
         val tp = Touchpad(imageView, net)
+//        val sr = ScreenReceiver(imageView);
         tp.touchPad()
 
+        net.startReceiving(imageView)
 
 
         val buttonPc = view.findViewById<AppCompatImageButton>(R.id.draggableButtonPC)
@@ -94,6 +97,7 @@ class PCStreamFragment : Fragment() {
             lifecycleScope.launch {
                 net.requestAccess(serverIpForCommands, serverPortForCommands, "END")
             }
+            net.stopReceiving(imageView)
             net.disconnect()
         }
     }

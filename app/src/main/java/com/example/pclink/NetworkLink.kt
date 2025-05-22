@@ -29,6 +29,7 @@ import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 class NetworkLink {
     private var socket: DatagramSocket? = null
@@ -211,80 +212,138 @@ class NetworkLink {
         }
     }
 
+    private val videoPort = 12313
     private var udpSocket: DatagramSocket? = null
-    private val receiveBuffer = ByteArray(65536) // Буфер для приема UDP пакетов (максимальный размер)
-    private val videoPort = 9050 // Должен совпадать с C# сервером
+    private val receiveBuffer = ByteArray(65536)
     private var receiveJob: Job? = null
-    private val uiScope = CoroutineScope(Dispatchers.Main) // Для обновления UI
+    private val uiScope = CoroutineScope(Dispatchers.Main)
+
     fun startReceiving(imageView: ImageView) {
-        // Отменяем предыдущую задачу, если она была
         receiveJob?.cancel()
         receiveJob = CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // Создаем и привязываем сокет
-                // Важно: Используем 0.0.0.0 чтобы слушать на всех интерфейсах
-                udpSocket = DatagramSocket(null)
-                udpSocket?.reuseAddress = true // Позволяет переиспользовать адрес немедленно
-                udpSocket?.bind(InetSocketAddress(videoPort))
-                Log.d("DesktopViewer", "UDP Socket bound to port $videoPort")
-
-                while (isActive) { // Пока корутина активна
-                    val packet = DatagramPacket(receiveBuffer, receiveBuffer.size)
-                    try {
-                        udpSocket?.receive(packet) // Блокирующая операция - ждем пакет
-
-                        if (packet.length > 0) {
-                            //Log.d("DesktopViewer", "Received packet: ${packet.length} bytes")
-
-                            // Декодируем полученные байты (JPEG) в Bitmap
-                            val bitmap = BitmapFactory.decodeByteArray(packet.data, packet.offset, packet.length)
-
-                            if (bitmap != null) {
-                                //Log.d("DesktopViewer", "Successfully decoded bitmap")
-                                uiScope.launch {
-                                    imageView.setImageBitmap(bitmap)
-                                }
-                            } else {
-                                Log.w("DesktopViewer", "Failed to decode received packet into Bitmap")
-                            }
-                        } else {
-                            Log.w("DesktopViewer", "Received empty packet (length 0)")
-                        }
-                    } catch (e: SocketException) {
-                        // SocketException часто возникает при закрытии сокета из другого потока
-                        if (isActive) { // Логируем ошибку только если корутина не отменена
-                            Log.e("DesktopViewer", "SocketException receiving data: ${e.message}", e)
-                        } else {
-                            Log.d("DesktopViewer", "Socket closed.")
-                        }
-                        break // Выходим из цикла при ошибке сокета
-                    } catch (e: Exception) {
-                        Log.e("DesktopViewer", "Error receiving or processing packet: ${e.message}", e)
-                        // Можно добавить небольшую паузу перед следующей попыткой
-                        delay(100)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("DesktopViewer", "Error setting up UDP socket: ${e.message}", e)
-            } finally {
-                udpSocket?.close() // Убедимся, что сокет закрыт при выходе из корутины
-                udpSocket = null
-                Log.d("DesktopViewer", "UDP receiving loop finished, socket closed.")
+            val fragmentMap = mutableMapOf<Int, FrameBuffer>()
+            udpSocket = DatagramSocket(null).apply {
+                reuseAddress = true
+                bind(InetSocketAddress(videoPort))
             }
+            Log.d("DesktopViewer", "UDP Socket bound to port $videoPort")
+
+            while (isActive) {
+                val packet = DatagramPacket(receiveBuffer, receiveBuffer.size)
+                udpSocket!!.receive(packet)
+                handlePacket(packet, imageView, fragmentMap);
+//                try {
+//                    udpSocket?.receive(packet)
+//
+//                    if (packet.length < 8) continue // слишком короткий пакет
+//
+//                    val data = packet.data
+//                    val offset = packet.offset
+//
+//                    // Чтение заголовка (4 байта frameId, 2 байта totalFragments, 2 байта fragmentIndex)
+//                    val frameId = ByteBuffer.wrap(data, offset, 4).order(ByteOrder.BIG_ENDIAN).int
+//                    val totalFragments = ByteBuffer.wrap(data, offset + 4, 2).order(ByteOrder.BIG_ENDIAN).short.toInt()
+//                    val fragmentIndex = ByteBuffer.wrap(data, offset + 6, 2).order(ByteOrder.BIG_ENDIAN).short.toInt()
+//
+//                    val fragmentData = data.copyOfRange(offset + 8, offset + packet.length)
+//
+//                    val frame = fragmentMap.getOrPut(frameId) {
+//                        FrameFragment(System.currentTimeMillis(), totalFragments, Array(totalFragments) { null })
+//                    }
+//
+//                    frame.fragments[fragmentIndex] = fragmentData
+////                    Log.d("DesktopViewer", "fragment get with index $fragmentIndex")
+//
+//                    // Проверяем, собраны ли все фрагменты
+//                    if (frame.fragments.take(frame.totalFragments).all { it != null }) {
+//                        val imageBytes = frame.fragments
+//                            .take(frame.totalFragments)
+//                            .flatMap { it!!.asIterable() }
+//                            .toByteArray()
+//                        fragmentMap.remove(frameId)
+//                        Log.d("DesktopViewer", "image created from fragments")
+//                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+//                        if (bitmap != null) {
+//                            uiScope.launch {
+//                                imageView.setImageBitmap(bitmap)
+//                            }
+//                        } else {
+//                            Log.w("DesktopViewer", "Failed to decode JPEG frame (frameId $frameId)")
+//                        }
+//                    }
+//
+//                    // Очистка старых фреймов (старше 1 секунды)
+//                    val now = System.currentTimeMillis()
+//                    fragmentMap.entries.removeIf { now - it.value.timestamp > 1000 }
+//
+//                } catch (e: Exception) {
+//                    if (isActive) {
+//                        Log.e("DesktopViewer", "Receiving error: ${e.message}", e)
+//                    }
+//                    break
+//                }
+            }
+
+            udpSocket?.close()
+            udpSocket = null
+            Log.d("DesktopViewer", "UDP receiving loop finished.")
         }
     }
 
     fun stopReceiving(imageView: ImageView) {
-        receiveJob?.cancel() // Отменяем корутину
+        receiveJob?.cancel()
         receiveJob = null
-        // Закрытие сокета произойдет в finally блоке корутины
-        // Важно: не вызывать close() здесь напрямую из UI потока, если receive() блокирует IO поток
-        // Корутина сама закроет сокет при отмене или ошибке
         Log.d("DesktopViewer", "Stop receiving requested.")
-        // Опционально - очистить ImageView
-        uiScope.launch{
+        uiScope.launch {
             imageView.setImageDrawable(null)
+        }
+    }
+    data class FrameBuffer(val totalFragments: Int) {
+        val fragments = Array<ByteArray?>(totalFragments) { null }
+    }
+
+    val fragmentMap = mutableMapOf<Int, FrameBuffer>()
+
+    fun handlePacket(packet: DatagramPacket, imageView: ImageView, fragmentMap: MutableMap<Int, FrameBuffer>) {
+        val data = packet.data
+        val buffer = ByteBuffer.wrap(data, 0, packet.length).order(ByteOrder.LITTLE_ENDIAN)
+
+        val frameId = buffer.int
+        val totalFragments = buffer.short.toInt() and 0xFFFF
+        val fragmentIndex = buffer.short.toInt() and 0xFFFF
+
+        val fragmentData = ByteArray(packet.length - 8)
+        System.arraycopy(data, 8, fragmentData, 0, fragmentData.size)
+
+        val frame = fragmentMap.getOrPut(frameId) { FrameBuffer(totalFragments) }
+
+        if (fragmentIndex >= totalFragments) {
+            Log.w("UDP", "Skipping invalid fragment index $fragmentIndex >= $totalFragments")
+            return
+        }
+
+        frame.fragments[fragmentIndex] = fragmentData
+        Log.d("UDP", "Fragment $fragmentIndex / $totalFragments for frame $frameId received")
+
+        if (frame.fragments.take(totalFragments).all { it != null }) {
+            val imageBytes = frame.fragments.take(totalFragments)
+                .flatMap { it!!.asIterable() }
+                .toByteArray()
+
+            fragmentMap.remove(frameId)
+            Log.d("DesktopViewer", "image created from fragments (frameId=$frameId)")
+
+            val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            if (bitmap != null) {
+                uiScope.launch {
+                    imageView.setImageBitmap(bitmap)
+                }
+            } else {
+                Log.w("DesktopViewer", "Failed to decode JPEG frame (frameId $frameId)")
+            }
         }
 
     }
+
+
 }
